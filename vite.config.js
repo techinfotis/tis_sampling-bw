@@ -16,9 +16,9 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'shaka-logo.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'Smart Farm Timbang Ayam',
-        short_name: 'Timbang Ayam',
-        description: 'Aplikasi timbang berat ayam dengan analitik - Smart Farm Layer 4.0',
+        name: 'TIS BW',
+        short_name: 'TIS BW',
+        description: 'Aplikasi timbang berat ayam Smart Farm Layer 4.0',
         theme_color: '#10b981',
         background_color: '#f9fafb',
         display: 'standalone',
