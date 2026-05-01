@@ -159,13 +159,49 @@ export default function Layout() {
       
       {/* Loading Overlay saat Update */}
       {isUpdating && (
-        <div className="fixed inset-0 z-[9999] bg-green-600 flex flex-col items-center justify-center text-white animate-in fade-in duration-300">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-green-200 border-t-white rounded-full animate-spin"></div>
-            <div className="absolute inset-0 flex items-center justify-center text-2xl">🐔</div>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 99999,
+          backgroundColor: '#16a34a', // green-600
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <style>{`
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes spinCustom { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            .spinner-custom {
+              width: 80px;
+              height: 80px;
+              border: 4px solid rgba(255,255,255,0.2);
+              border-top: 4px solid white;
+              border-radius: 50%;
+              animation: spinCustom 1s linear infinite;
+            }
+          `}</style>
+          <div style={{ position: 'relative' }}>
+            <div className="spinner-custom"></div>
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            }}>🐔</div>
           </div>
-          <h2 className="mt-6 text-xl font-bold">Smart Farm</h2>
-          <p className="mt-2 text-green-100 animate-pulse text-sm">Menyiapkan versi terbaru...</p>
+          <h2 style={{ marginTop: '24px', fontSize: '20px', fontWeight: 'bold' }}>Smart Farm</h2>
+          <p style={{ marginTop: '8px', color: '#dcfce7', fontSize: '14px' }}>Menyiapkan versi terbaru...</p>
         </div>
       )}
 
