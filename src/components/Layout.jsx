@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { getCurrentUser, logout, isAdmin } from '../lib/auth';
+import { getCurrentUser, logout, isAdmin, canAccessUserManagement } from '../lib/auth';
 import { useEffect, useState, useCallback } from 'react';
 import { syncToSupabase, pullFromSupabase } from '../lib/sync';
 
@@ -102,8 +102,10 @@ export default function Layout() {
     { to: '/input', label: 'Input' },
     { to: '/sebaran', label: 'Sebaran' },
     { to: '/kandang', label: 'Kandang' },
+    ...(canAccessUserManagement() ? [
+      { to: '/users', label: 'Users' }
+    ] : []),
     ...(isAdmin() ? [
-      { to: '/users', label: 'Users' },
       { to: '/admin', label: 'Audit' }
     ] : [])
   ];
@@ -145,7 +147,7 @@ export default function Layout() {
         </svg>
       )
     },
-    ...(isAdmin() ? [
+    ...(canAccessUserManagement() ? [
       {
         to: '/users',
         label: 'Users',
@@ -251,7 +253,7 @@ export default function Layout() {
                       <span className="text-green-600">🏠</span> + Kandang
                     </button>
                     
-                    {isAdmin() && (
+                    {canAccessUserManagement() && (
                       <button
                         onClick={() => { navigate('/users'); setShowProfileMenu(false); }}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center gap-2"

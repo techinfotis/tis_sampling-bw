@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { getAllUsers, createUser, updateUser, deleteUser } from '../lib/db';
-import { isAdmin, getCurrentUser, isDemoAccount, canManageUsers, isSuperAdmin } from '../lib/auth';
+import { isAdmin, getCurrentUser, isDemoAccount, canManageUsers, isSuperAdmin, canAccessUserManagement, getAvailableRolesToCreate, ROLE_LABELS, ROLES } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
 
 const DEMO_USERNAMES = ['admin', 'operator'];
@@ -16,8 +16,9 @@ export default function UserManagement() {
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const availableRoles = getAvailableRolesToCreate();
   const [formData, setFormData] = useState({
-    username: '', password: '', nama: '', role: 'operator'
+    username: '', password: '', nama: '', role: availableRoles[0] || 'staff'
   });
 
   const allUsers = useLiveQuery(() => getAllUsers(), []);
@@ -27,7 +28,7 @@ export default function UserManagement() {
     ? allUsers?.filter(u => DEMO_USERNAMES.includes(u.username))
     : allUsers;
 
-  if (!isAdmin()) {
+  if (!canAccessUserManagement()) {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="bg-red-50 border border-red-200 p-6 rounded-lg text-center">
@@ -86,7 +87,7 @@ export default function UserManagement() {
   };
 
   const resetForm = () => {
-    setFormData({ username: '', password: '', nama: '', role: 'operator' });
+    setFormData({ username: '', password: '', nama: '', role: availableRoles[0] || 'staff' });
     setEditingId(null);
     setShowForm(false);
   };
@@ -181,13 +182,12 @@ export default function UserManagement() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   required
                 >
-                  <option value="operator">Operator</option>
-                  {superAdmin && <option value="admin">Admin</option>}
+                  {availableRoles.map(role => (
+                    <option key={role} value={role}>{ROLE_LABELS[role]}</option>
+                  ))}
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  {superAdmin
-                    ? 'Admin: Kelola user & kandang sendiri | Operator: Input data'
-                    : 'Anda hanya dapat menambahkan Operator'}
+                  Anda hanya dapat membuat user dengan level di bawah Anda sesuai hirarki.
                 </p>
               </div>
             </div>
@@ -244,15 +244,14 @@ export default function UserManagement() {
                       <td className="p-3">{user.nama}</td>
                       <td className="p-3">
                         <span className={`px-3 py-1 rounded text-sm font-semibold ${
-                          isSuperAdminRow ? 'bg-purple-100 text-purple-700'
-                          : isDemoRow ? 'bg-orange-100 text-orange-700'
-                          : user.role === 'admin' ? 'bg-green-100 text-green-700'
-                          : 'bg-blue-100 text-blue-700'
+                          user.role === ROLES.SUPERADMIN ? 'bg-purple-100 text-purple-700'
+                          : user.role === ROLES.ADMIN ? 'bg-green-100 text-green-700'
+                          : user.role === ROLES.OPERATOR ? 'bg-blue-100 text-blue-700'
+                          : user.role === ROLES.MANAJER ? 'bg-orange-100 text-orange-700'
+                          : 'bg-gray-100 text-gray-700'
                         }`}>
-                          {isSuperAdminRow ? '🔐 Superadmin'
-                            : isDemoRow ? `🎭 Demo (${user.role === 'admin' ? 'Admin' : 'Operator'})`
-                            : user.role === 'admin' ? '👑 Admin'
-                            : '👤 Operator'}
+                          {ROLE_LABELS[user.role] || user.role}
+                          {isDemoRow && ' (Demo)'}
                         </span>
                       </td>
                       {superAdmin && (

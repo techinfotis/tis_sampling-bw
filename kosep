@@ -72,12 +72,3 @@ def analisa(session):
     uniformity = (uniform_count/len(subset))*100
     return {"mean":mean, "cv":cv, "uniformity":uniformity}
 ```
-
----
-
-### 🌐 **Sinkronisasi Data**
-- Data timbang disimpan lokal (IndexedDB) saat offline.  
-- Saat koneksi tersedia, otomatis tersinkron ke Supabase.  
-- Dashboard desktop langsung menampilkan update terbaru.
-
----

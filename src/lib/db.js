@@ -162,17 +162,13 @@ export async function getScopedSessions() {
   const scopedKandangs = await getAllKandangs();
   const scopedKodes = new Set(scopedKandangs.map(k => k.kode));
 
-  // Dapatkan semua username yang berada di bawah admin ini (termasuk operator-operatornya)
-  const allUsers = await db.users.toArray();
-  const scopedUsernames = new Set(
-    allUsers
-      .filter(u => u.username === scope || u.owner === scope)
-      .map(u => u.username)
-  );
+  // Dapatkan semua username yang berada di bawah admin ini (rekursif)
+  const subordinateList = await getSubordinateUsernames(scope);
+  const scopedUsernames = new Set(subordinateList);
 
   // Session termasuk jika:
-  // 1. Dibuat oleh user dalam scope (admin atau operatornya)
-  // 2. Berada di kandang milik admin dalam scope
+  // 1. Dibuat oleh user dalam scope
+  // 2. Berada di kandang yang bisa dilihat oleh user dalam scope
   return await db.sessions.filter(s =>
     scopedUsernames.has(s.created_by) || scopedKodes.has(s.kandang)
   ).toArray();
@@ -252,9 +248,13 @@ export async function getAllKandangs() {
     // superadmin atau demo: lihat semua
     return await db.kandangs.toArray();
   }
-  // admin: lihat kandang yang dibuat oleh dirinya
-  // operator: lihat kandang yang dibuat oleh admin-nya (owner)
-  return await db.kandangs.filter(k => k.created_by === scope).toArray();
+
+  // Dapatkan semua username bawahan
+  const subordinateList = await getSubordinateUsernames(scope);
+  const subordinateSet = new Set(subordinateList);
+
+  // User bisa melihat kandang yang dibuat oleh dirinya sendiri atau bawahannya
+  return await db.kandangs.filter(k => subordinateSet.has(k.created_by)).toArray();
 }
 
 export async function getKandangByKode(kode) {
@@ -399,16 +399,37 @@ export async function getAuditLogs(filters = {}) {
 // ============================================
 // USERS
 // ============================================
+
+// Fungsi bantu untuk mendapatkan semua username bawahan (rekursif)
+export async function getSubordinateUsernames(topUsername) {
+  const allUsers = await db.users.toArray();
+  const subordinates = new Set([topUsername]);
+  
+  let added;
+  do {
+    added = false;
+    for (const user of allUsers) {
+      // Jika owner-nya ada di dalam set subordinates kita, maka dia adalah bawahan kita
+      if (user.owner && subordinates.has(user.owner) && !subordinates.has(user.username)) {
+        subordinates.add(user.username);
+        added = true;
+      }
+    }
+  } while (added);
+  
+  return Array.from(subordinates);
+}
+
 export async function getAllUsers() {
   const scope = getDataScope();
   if (scope === null) {
-    // superadmin: lihat semua user
     return await db.users.toArray();
   }
-  // admin: lihat dirinya sendiri + user yang dia buat (owner === username admin)
-  return await db.users.filter(u =>
-    u.username === scope || u.owner === scope
-  ).toArray();
+  
+  const subordinateList = await getSubordinateUsernames(scope);
+  const subordinateSet = new Set(subordinateList);
+  
+  return await db.users.filter(u => subordinateSet.has(u.username)).toArray();
 }
 
 export async function createUser(data) {

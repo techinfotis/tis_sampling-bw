@@ -1,8 +1,39 @@
 import { db } from './db';
 import { signInUser, signOutUser, signUpUser } from './supabase';
 
-// Superadmin — akses tertinggi, tidak bisa dihapus/diedit siapapun
-const SUPERADMIN = { username: 'shakadigital', password: 'abrisam2554' };
+// Hirarki Role
+export const ROLES = {
+  SUPERADMIN: 'superadmin',
+  ADMIN: 'admin',
+  OPERATOR: 'operator',
+  MANAJER: 'manajer',
+  STAFF: 'staff'
+};
+
+// Nama tampilan role
+export const ROLE_LABELS = {
+  [ROLES.SUPERADMIN]: '🔐 Superadmin',
+  [ROLES.ADMIN]: '👑 Admin',
+  [ROLES.OPERATOR]: '👤 Operator',
+  [ROLES.MANAJER]: '👔 Manajer Farm',
+  [ROLES.STAFF]: '🚜 Staff Farm'
+};
+
+// Menentukan siapa yang bisa dibuat oleh siapa
+export const ROLE_PERMISSIONS = {
+  [ROLES.SUPERADMIN]: [ROLES.ADMIN],
+  [ROLES.ADMIN]: [ROLES.OPERATOR],
+  [ROLES.OPERATOR]: [ROLES.MANAJER],
+  [ROLES.MANAJER]: [ROLES.STAFF],
+  [ROLES.STAFF]: []
+};
+
+export const SUPERADMIN = {
+  username: 'shakadigital',
+  password: 'abrisam2554',
+  nama: 'Shaka Digital',
+  role: ROLES.SUPERADMIN
+};
 
 // Akun demo bawaan — bisa login tapi hanya lihat data demo
 const DEMO_ACCOUNTS = [
@@ -31,7 +62,24 @@ export function setCurrentUser(user) {
 
 export function isAdmin() {
   const user = getCurrentUser();
-  return user?.role === 'admin';
+  return user?.role === ROLES.ADMIN || user?.role === ROLES.SUPERADMIN;
+}
+
+// Cek apakah user bisa masuk ke halaman User Management
+export function canAccessUserManagement() {
+  const user = getCurrentUser();
+  if (!user) return false;
+  if (isSuperAdmin()) return true;
+  // Staff tidak bisa mengelola siapapun
+  return user.role !== ROLES.STAFF;
+}
+
+// Dapatkan daftar role yang bisa dibuat oleh user saat ini
+export function getAvailableRolesToCreate() {
+  const user = getCurrentUser();
+  if (!user) return [];
+  if (isSuperAdmin()) return [ROLES.ADMIN, ROLES.OPERATOR]; // Superadmin bisa buat Admin atau langsung Operator
+  return ROLE_PERMISSIONS[user.role] || [];
 }
 
 export function isSuperAdmin() {
