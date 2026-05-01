@@ -100,22 +100,28 @@ export default function UserManagement() {
           <div className="flex gap-2">
             {canManage && (
               <>
+          <div className="flex flex-wrap gap-2 justify-end">
+            {canManage && (
+              <>
                 <button
                   onClick={async () => {
                     const { syncToSupabase } = await import('../lib/sync');
                     await syncToSupabase();
                     alert('Sync selesai!');
                   }}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm"
+                  className="bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 text-xs md:text-sm font-medium flex items-center gap-1"
                 >
-                  ⟳ Sync ke Cloud
+                  <span className="text-sm">⟳</span> Sync
                 </button>
                 <button
                   onClick={() => setShowForm(!showForm)}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                  className="bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 text-xs md:text-sm font-medium flex items-center gap-1"
                 >
-                  {showForm ? 'Tutup Form' : '+ Tambah User Baru'}
+                  <span>{showForm ? '✕ Tutup' : '+ User'}</span>
                 </button>
+              </>
+            )}
+          </div>
               </>
             )}
           </div>

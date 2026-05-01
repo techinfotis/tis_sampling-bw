@@ -126,9 +126,9 @@ export default function KandangManagement() {
           <h2 className="text-2xl font-bold">Manajemen Kandang</h2>
           <button
             onClick={handleShowForm}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+            className="bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 text-xs md:text-sm font-medium flex items-center gap-1"
           >
-            {showForm ? 'Tutup Form' : '+ Daftar Kandang Baru'}
+            {showForm ? '✕ Tutup' : '+ Kandang'}
           </button>
         </div>
 
