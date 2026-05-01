@@ -12,6 +12,7 @@ export default function Layout() {
   const [syncStatus, setSyncStatus] = useState(null); // 'ok' | 'error' | null
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Deteksi update Service Worker
   useEffect(() => {
@@ -50,12 +51,16 @@ export default function Layout() {
   }, []);
 
   const handleUpdate = () => {
+    setIsUpdating(true);
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(reg => {
         reg.waiting?.postMessage({ type: 'SKIP_WAITING' });
       });
     }
-    window.location.reload();
+    // Beri sedikit jeda agar user melihat animasi loading sebelum refresh
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
 
   useEffect(() => {
@@ -151,6 +156,18 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      
+      {/* Loading Overlay saat Update */}
+      {isUpdating && (
+        <div className="fixed inset-0 z-[9999] bg-green-600 flex flex-col items-center justify-center text-white animate-in fade-in duration-300">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-green-200 border-t-white rounded-full animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center text-2xl">🐔</div>
+          </div>
+          <h2 className="mt-6 text-xl font-bold">Smart Farm</h2>
+          <p className="mt-2 text-green-100 animate-pulse text-sm">Menyiapkan versi terbaru...</p>
+        </div>
+      )}
 
       {/* Banner update tersedia */}
       {updateAvailable && (
