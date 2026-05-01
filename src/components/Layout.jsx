@@ -11,6 +11,7 @@ export default function Layout() {
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null); // 'ok' | 'error' | null
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Deteksi update Service Worker
   useEffect(() => {
@@ -214,42 +215,71 @@ export default function Layout() {
               )}
             </div>
 
-            {/* Desktop Nav */}
-            <div className="hidden md:flex gap-2 items-center">
-              {desktopLinks.map(link => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`px-4 py-2 rounded text-sm ${location.pathname === link.to ? 'bg-green-700' : 'hover:bg-green-500'}`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              {/* Tombol Sync Manual Desktop */}
+            {/* Profile Menu (Desktop & Mobile) */}
+            <div className="relative">
               <button
-                onClick={doSync}
-                disabled={syncing || !isOnline}
-                className="px-4 py-2 rounded text-sm bg-green-500 hover:bg-green-400 disabled:opacity-50 flex items-center gap-1"
-                title="Sync data dari server"
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-green-500 transition-colors border-2 border-transparent hover:border-green-300"
               >
-                <span className={syncing ? 'inline-block animate-spin' : ''}>⟳</span>
-                <span className="hidden lg:inline">Sync</span>
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-full flex items-center justify-center text-green-600 shadow-sm overflow-hidden">
+                  <svg className="w-5 h-5 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <svg className={`w-4 h-4 hidden md:block transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded text-sm bg-red-500 hover:bg-red-600"
-              >
-                Logout
-              </button>
-            </div>
 
-            {/* Mobile: Logout di top nav */}
-            <button
-              className="md:hidden px-3 py-1.5 rounded text-xs bg-red-500 hover:bg-red-600 font-medium"
-              onClick={handleLogout}
-            >
-              Logout
-            </button>
+              {/* Dropdown Menu */}
+              {showProfileMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowProfileMenu(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50 border border-gray-100 animate-in fade-in zoom-in duration-100">
+                    <div className="px-4 py-2 border-b border-gray-100 mb-1">
+                      <p className="text-xs text-gray-500">Login sebagai</p>
+                      <p className="text-sm font-bold text-gray-800 truncate">{user?.nama}</p>
+                    </div>
+                    
+                    <button
+                      onClick={() => { navigate('/kandang'); setShowProfileMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center gap-2"
+                    >
+                      <span className="text-green-600">🏠</span> + Kandang
+                    </button>
+                    
+                    {isAdmin() && (
+                      <button
+                        onClick={() => { navigate('/users'); setShowProfileMenu(false); }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center gap-2"
+                      >
+                        <span className="text-blue-600">👥</span> + User
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => { doSync(); setShowProfileMenu(false); }}
+                      disabled={syncing || !isOnline}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <span className={syncing ? 'animate-spin' : ''}>🔄</span> Sync Data
+                    </button>
+                    
+                    <hr className="my-1 border-gray-100" />
+                    
+                    <button
+                      onClick={() => { handleLogout(); setShowProfileMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <span>🚪</span> Logout
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </nav>

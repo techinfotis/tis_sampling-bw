@@ -34,6 +34,29 @@ export default function KandangManagement() {
   const kandangs = useLiveQuery(() => getAllKandangs(), []);
   const userCanDelete = canDelete();
 
+  // Hitung kode otomatis: 4 digit + "." (misal: 0001.)
+  const generateNextCode = () => {
+    if (!kandangs || kandangs.length === 0) return '0001.';
+    
+    // Ambil semua prefix angka 4 digit
+    const numbers = kandangs
+      .map(k => {
+        const match = k.kode.match(/^(\d{4})\./);
+        return match ? parseInt(match[1]) : 0;
+      })
+      .filter(n => n > 0);
+    
+    const nextNum = numbers.length > 0 ? Math.max(...numbers) + 1 : kandangs.length + 1;
+    return String(nextNum).padStart(4, '0') + '.';
+  };
+
+  const handleShowForm = () => {
+    if (!showForm && !editingId) {
+      setFormData(prev => ({ ...prev, kode: generateNextCode() }));
+    }
+    setShowForm(!showForm);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -102,7 +125,7 @@ export default function KandangManagement() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">Manajemen Kandang</h2>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={handleShowForm}
             className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
           >
             {showForm ? 'Tutup Form' : '+ Daftar Kandang Baru'}
@@ -117,15 +140,20 @@ export default function KandangManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block mb-2 font-semibold">Kode Kandang *</label>
-                <input
-                  type="text"
-                  className="w-full p-2 border rounded disabled:bg-gray-100"
-                  value={formData.kode}
-                  onChange={(e) => setFormData({ ...formData, kode: e.target.value })}
-                  placeholder="Contoh: A, B, C1"
-                  required
-                  disabled={editingId !== null}
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full p-2 border rounded disabled:bg-gray-100"
+                    value={formData.kode}
+                    onChange={(e) => setFormData({ ...formData, kode: e.target.value })}
+                    placeholder="Contoh: 0001.A"
+                    required
+                    disabled={editingId !== null}
+                  />
+                  {!editingId && !formData.kode.includes('.') && (
+                    <p className="text-[10px] text-orange-600 mt-1">Format: 0001.NamaKandang</p>
+                  )}
+                </div>
               </div>
 
               <div>
