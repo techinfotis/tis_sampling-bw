@@ -1,0 +1,83 @@
+
+**Judul Prompt:**  
+Smart Farm Layer 4.0 – Timbang Ayam Farm (Desktop + Mobile PWA)
+
+---
+
+### 🎯 **Tujuan**
+Membangun aplikasi timbang berat ayam yang efisien dan analitis, dengan dua mode:
+- **Desktop:** dashboard interaktif untuk analisa dan perbandingan antar kandang.  
+- **Mobile (PWA):** input berat per ekor secara cepat dan offline di lapangan.
+
+---
+
+### 🧩 **Alur Utama**
+1. **Setup Awal (Auto-Detect Umur):**
+   - User memilih **Kandang** (misalnya “Kandang A”).  
+   - Aplikasi otomatis mendeteksi **umur ayam (minggu)** dari histori kandang.  
+   - Metadata ini digunakan untuk seluruh sesi timbang minggu tersebut.
+
+2. **Input Berat Per Ekor (Mobile PWA):**
+   - Input angka acak maksimal 4 digit (contoh: 1234 gr).  
+   - Tombol input berupa **ikon “+”** di sisi kanan form (30% lebar layar).  
+   - Label di atas form: **“Jumlah Data: X Ekor”** yang bertambah otomatis.  
+   - Tabel urutan terbaru di atas (scrollable).  
+   - Tombol **“Review & Simpan”** di bawah form.  
+   - Offline caching dengan **Workbox** agar tetap bisa input tanpa sinyal.
+
+3. **Review & Simpan:**
+   - Tampilkan hasil analisa:
+     - **Rata-rata (Mean)**  
+     - **Keseragaman (Uniformity)** ±10% dari rata-rata  
+     - **Koefisien Variasi (CV)** = standar deviasi ÷ rata-rata × 100%  
+     - **Sebaran (Distribution)**: histogram/tabel distribusi berat  
+   - Dropdown **“Bandingkan dengan:”** untuk memilih kandang lain pada umur yang sama.  
+   - Simpan hasil ke histori mingguan.
+
+4. **Dashboard Desktop (Analitik):**
+   - Filter dinamis: *Pilih Kandang* dan *Pilih Umur*.  
+   - Kartu ringkasan cepat: *Total Ekor*, *Rata-rata Berat*, *Keseragaman*, *CV*.  
+   - Grafik tren mingguan (multi-line antar kandang).  
+   - Histogram distribusi berat ayam.  
+   - Tabel histori timbang dengan tombol **Download Data**.  
+   - Box perbandingan antar kandang (selisih tertinggi ditampilkan otomatis).
+
+---
+
+### ⚙️ **Teknologi Disarankan**
+| Mode | Framework | Database | UI/UX | Fitur Tambahan |
+|------|------------|-----------|--------|----------------|
+| **Desktop** | React + Chart.js/Recharts | Supabase | Tailwind / Chakra UI | Export CSV, fullscreen chart |
+| **Mobile (PWA)** | React + Vite + Workbox | IndexedDB + Supabase Sync | Responsive grid | Offline caching, auto-sync |
+| **Shared** | Supabase Auth + RLS | Multi-tenant schema | Bahasa Indonesia localization | Audit log + role-based access |
+
+---
+
+### 📊 **Contoh Struktur Data**
+```python
+session = {"kandang": "A", "umur_mg": 6, "data_timbang": []}
+
+def input_berat(session, berat):
+    id_ayam = len(session["data_timbang"]) + 1
+    session["data_timbang"].insert(0, {"id_ayam": id_ayam, "berat": berat})
+    return session
+
+def analisa(session):
+    subset = [d["berat"] for d in session["data_timbang"]]
+    mean = sum(subset)/len(subset)
+    std_dev = (sum((x-mean)**2 for x in subset)/len(subset))**0.5
+    cv = (std_dev/mean)*100
+    batas_bawah, batas_atas = mean*0.9, mean*1.1
+    uniform_count = sum(1 for x in subset if batas_bawah <= x <= batas_atas)
+    uniformity = (uniform_count/len(subset))*100
+    return {"mean":mean, "cv":cv, "uniformity":uniformity}
+```
+
+---
+
+### 🌐 **Sinkronisasi Data**
+- Data timbang disimpan lokal (IndexedDB) saat offline.  
+- Saat koneksi tersedia, otomatis tersinkron ke Supabase.  
+- Dashboard desktop langsung menampilkan update terbaru.
+
+---
